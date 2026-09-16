@@ -109,7 +109,7 @@ export function Home() {
               <img src={nextUp.coverImageUrl} alt="" className="h-full w-full object-cover" />
             </div>
 
-            <div className="md:col-span-5 md:-ml-24 md:pt-8">
+            <div className="relative z-10 md:col-span-5 md:-ml-24 md:pt-8">
               <p className="mb-3 text-sm text-lime">Paling dekat</p>
 
               <h3 className="font-display text-huge uppercase text-cream">
