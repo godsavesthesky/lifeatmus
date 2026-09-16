@@ -1,0 +1,201 @@
+import type { EventRecord, User, WeeklyPlaylist } from '@/types'
+
+const avatar = (seed: string) => `https://i.pravatar.cc/150?u=${seed}`
+
+export const currentUser: User = {
+  id: 'u-0',
+  name: 'Jihan Sachoya',
+  email: 'jihan@company.com',
+  avatarUrl: avatar('jihan'),
+  department: 'Desain Grafis',
+  departmentVerified: true,
+  role: 'intern',
+  isAdmin: true,
+  createdAt: '2026-01-10',
+}
+
+export const mockUsers: User[] = [
+  currentUser,
+  { id: 'u-1', name: 'Andi Prakoso', email: 'andi@company.com', avatarUrl: avatar('andi'), department: 'Digital Marketing', departmentVerified: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
+  { id: 'u-2', name: 'Sarah Wijaya', email: 'sarah@company.com', avatarUrl: avatar('sarah'), department: 'Content Creator', departmentVerified: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
+  { id: 'u-3', name: 'Raka Putra', email: 'raka@company.com', avatarUrl: avatar('raka'), department: 'Software Developer', departmentVerified: true, role: 'employee', isAdmin: true, createdAt: '2026-01-10' },
+  { id: 'u-4', name: 'Nadia Kusuma', email: 'nadia@company.com', avatarUrl: avatar('nadia'), department: 'HR (Human Resources)', departmentVerified: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
+  { id: 'u-5', name: 'Bimo Aditya', email: 'bimo@company.com', avatarUrl: avatar('bimo'), department: 'IT Support', departmentVerified: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
+  { id: 'u-6', name: 'Clara Dewi', email: 'clara@company.com', avatarUrl: avatar('clara'), department: 'Admin Keuangan', departmentVerified: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
+  // Recent sign-ups awaiting admin confirmation of their self-selected department
+  { id: 'u-7', name: 'Yoga Saputra', email: 'yoga@company.com', avatarUrl: avatar('yoga'), department: 'AI Engineer', departmentVerified: false, role: 'intern', isAdmin: false, createdAt: '2026-09-15' },
+  { id: 'u-8', name: 'Dewi Anggraini', email: 'dewi.a@company.com', avatarUrl: avatar('dewi'), department: 'Videographer', departmentVerified: false, role: 'employee', isAdmin: false, createdAt: '2026-09-16' },
+]
+
+const attendeesFor = (eventId: string, userIds: string[]): EventRecord['attendees'] =>
+  userIds.map((uid, i) => {
+    const u = mockUsers.find((m) => m.id === uid)!
+    return {
+      id: `att-${eventId}-${i}`,
+      eventId,
+      userId: uid,
+      status: 'confirmed',
+      joinedAt: '2026-09-14T10:00:00Z',
+      user: { id: u.id, name: u.name, department: u.department, avatarUrl: u.avatarUrl },
+    }
+  })
+
+export const mockEvents: EventRecord[] = [
+  {
+    id: 'ev-1',
+    title: 'Surabaya Night Run',
+    description:
+      'Lari malam santai keliling kawasan Pakuwon dengan rute 5K dan 10K. Terbuka untuk semua level, ada water station tiap 2K dan medali finisher untuk semua peserta.',
+    coverImageUrl: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=1400&auto=format&fit=crop',
+    eventType: 'external',
+    category: 'Sports',
+    date: '2026-09-19',
+    startTime: '19:00',
+    endTime: '22:00',
+    organizerName: 'ABC Events',
+    locationName: 'Pakuwon Mall',
+    locationAddress: 'Jl. Puncak Indah Lontar No.2, Surabaya',
+    googleMapsUrl: 'https://maps.google.com/?q=Pakuwon+Mall+Surabaya',
+    cost: 150000,
+    costType: 'registration_fee',
+    registrationStatus: 'open',
+    registrationOpenAt: '2026-09-01T00:00:00Z',
+    registrationCloseAt: '2026-09-18T23:59:00Z',
+    externalRegistrationUrl: 'https://runsystem.example.com/surabaya-night-run',
+    externalEventUrl: 'https://abcevents.example.com/surabaya-night-run',
+    maxAttendees: 200,
+    createdBy: 'u-3',
+    attendees: attendeesFor('ev-1', ['u-1', 'u-2', 'u-4', 'u-5']),
+  },
+  {
+    id: 'ev-2',
+    title: 'Friday Night Dinner',
+    description:
+      'Makan malam bareng seluruh tim sambil ngobrol santai, sekaligus merayakan pencapaian kuartal ini. Menu keluarga, dress code casual.',
+    coverImageUrl: 'https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=1400&auto=format&fit=crop',
+    eventType: 'internal',
+    category: 'Social',
+    date: '2026-09-18',
+    startTime: '18:30',
+    endTime: '21:00',
+    organizerName: 'Office Committee',
+    organizerDepartment: 'People',
+    locationName: 'Bebek Tepi Sawah',
+    locationAddress: 'Jl. Ir. Soekarno No.99, Surabaya',
+    googleMapsUrl: 'https://maps.google.com/?q=Bebek+Tepi+Sawah+Surabaya',
+    cost: 75000,
+    costType: 'contribution',
+    registrationStatus: 'open',
+    registrationCloseAt: '2026-09-17T23:59:00Z',
+    maxAttendees: 40,
+    createdBy: 'u-4',
+    attendees: attendeesFor('ev-2', ['u-0', 'u-1', 'u-2', 'u-3', 'u-5', 'u-6']),
+  },
+  {
+    id: 'ev-3',
+    title: 'Office Badminton',
+    description:
+      'Sesi badminton rutin tiap minggu. Peralatan disediakan, tinggal bawa sepatu olahraga. Cocok buat semua level, dari pemula sampai jago.',
+    coverImageUrl: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=1400&auto=format&fit=crop',
+    eventType: 'internal',
+    category: 'Sports',
+    date: '2026-09-17',
+    startTime: '17:00',
+    endTime: '19:00',
+    organizerName: 'Sports Club',
+    organizerDepartment: 'Technology',
+    locationName: 'GOR Kertajaya',
+    locationAddress: 'Jl. Kertajaya Indah, Surabaya',
+    googleMapsUrl: 'https://maps.google.com/?q=GOR+Kertajaya+Surabaya',
+    cost: 25000,
+    costType: 'contribution',
+    registrationStatus: 'open',
+    maxAttendees: 16,
+    createdBy: 'u-3',
+    attendees: attendeesFor('ev-3', ['u-3', 'u-5']),
+  },
+  {
+    id: 'ev-4',
+    title: 'Creative Conference 2026',
+    description:
+      'Konferensi tahunan untuk para praktisi kreatif — desain, brand, dan storytelling. Menghadirkan pembicara dari berbagai studio ternama.',
+    coverImageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1400&auto=format&fit=crop',
+    eventType: 'external',
+    category: 'Event',
+    date: '2026-09-20',
+    startTime: '09:00',
+    endTime: '17:00',
+    organizerName: 'Creative Indonesia',
+    locationName: 'Dyandra Convention Center',
+    locationAddress: 'Jl. Basuki Rahmat No.2-4, Surabaya',
+    googleMapsUrl: 'https://maps.google.com/?q=Dyandra+Convention+Center+Surabaya',
+    cost: 350000,
+    costType: 'registration_fee',
+    registrationStatus: 'closed',
+    registrationCloseAt: '2026-09-10T23:59:00Z',
+    externalRegistrationUrl: 'https://tiket.example.com/creative-conference-2026',
+    externalEventUrl: 'https://creativeconf.example.com',
+    maxAttendees: 500,
+    createdBy: 'u-2',
+    attendees: attendeesFor('ev-4', ['u-0', 'u-2']),
+  },
+  {
+    id: 'ev-5',
+    title: 'Product Sharing Session',
+    description:
+      'Sesi berbagi internal tentang roadmap produk kuartal depan, terbuka untuk seluruh tim yang ingin tahu arah produk selanjutnya.',
+    coverImageUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=1400&auto=format&fit=crop',
+    eventType: 'internal',
+    category: 'Sharing',
+    date: '2026-09-17',
+    startTime: '13:00',
+    endTime: '14:00',
+    organizerName: 'Sarah Wijaya',
+    organizerDepartment: 'Product',
+    locationName: 'Ruang Meeting Lt. 5',
+    locationAddress: 'Kantor Pusat, Surabaya',
+    googleMapsUrl: 'https://maps.google.com/?q=Surabaya',
+    cost: 0,
+    costType: 'free',
+    registrationStatus: 'not_required',
+    createdBy: 'u-2',
+    attendees: attendeesFor('ev-5', ['u-0', 'u-1', 'u-3', 'u-4', 'u-5', 'u-6']),
+  },
+  {
+    id: 'ev-6',
+    title: 'Morning Yoga Session',
+    description:
+      'Mulai hari dengan yoga ringan untuk badan lebih segar. Matras disediakan, cukup datang dan ikuti instruktur.',
+    coverImageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1400&auto=format&fit=crop',
+    eventType: 'internal',
+    category: 'Social',
+    date: '2026-09-21',
+    startTime: '07:00',
+    endTime: '08:00',
+    organizerName: 'Wellness Committee',
+    organizerDepartment: 'People',
+    locationName: 'Rooftop Kantor',
+    locationAddress: 'Kantor Pusat, Surabaya',
+    googleMapsUrl: 'https://maps.google.com/?q=Surabaya',
+    cost: 0,
+    costType: 'free',
+    registrationStatus: 'open',
+    maxAttendees: 20,
+    createdBy: 'u-4',
+    attendees: attendeesFor('ev-6', ['u-1', 'u-4']),
+  },
+]
+
+export const weekRangeLabel = '15 — 21 SEPTEMBER 2026'
+
+export const weeklyPlaylist: WeeklyPlaylist = {
+  id: 'pl-1',
+  weekLabel: weekRangeLabel,
+  title: 'Office Mood: Friday Energy',
+  curatorName: 'Curated by the People team',
+  coverImageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=800&auto=format&fit=crop',
+  // Replace with your real playlist's embed URL: turn a normal
+  // music.apple.com/... share link into embed.music.apple.com/... to get this.
+  appleMusicEmbedUrl: 'https://embed.music.apple.com/us/playlist/todays-hits/pl.f4d106fed2bd41149aaacabb233eb5eb',
+  appleMusicUrl: 'https://music.apple.com/us/playlist/todays-hits/pl.f4d106fed2bd41149aaacabb233eb5eb',
+}

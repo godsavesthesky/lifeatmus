@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #0a0a0c;
+  --cream: #f4f1e8;
+  --lime: #c6ff4a;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'Schibsted Grotesk', system-ui, sans-serif;
+  background-color: var(--ink);
+  color: var(--cream);
+  font-feature-settings: 'ss01' 1, 'cv05' 1;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background-color: var(--lime);
+  color: var(--ink);
+}
+
+/* Fokus keyboard yang benar-benar kelihatan di latar gelap. Jangan pernah
+   dihapus demi estetika — ini satu-satunya petunjuk posisi bagi orang yang
+   menavigasi tanpa mouse. */
+:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 3px;
+}
+
+/* Topeng untuk judul yang naik saat halaman dimuat. Elemen luar memotong,
+   elemen dalam yang bergerak. */
+.mask-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em; /* ruang untuk descender agar tidak terpotong */
+}
+
+/* Angka tabular supaya kolom jam dan tanggal di indeks tidak goyang. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Ticker: isi digandakan dua kali di markup, geser -50% = loop mulus. */
+.ticker-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+.ticker:hover .ticker-track,
+.ticker:focus-within .ticker-track {
+  animation-play-state: paused;
+}
+
+/* Garis bawah yang tumbuh dari kiri saat hover — pengganti text-decoration
+   bawaan yang mati rasa. */
+.link-sweep {
+  position: relative;
+  display: inline-block;
+}
+.link-sweep::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 1px;
+  width: 100%;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.link-sweep:hover::after,
+.link-sweep:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* Butiran halus di atas blok gambar besar, supaya foto stok tidak terlihat
+   terlalu bersih dan lebih menyatu dengan latar. */
+.grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+/* Elemen yang muncul saat digulir. Kelas .is-visible ditambahkan oleh
+   komponen Reveal lewat IntersectionObserver. */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 26px, 0);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Satu tempat untuk mematikan semua gerak. Termasuk animasi bernama,
+   karena transition-duration saja tidak menghentikan marquee. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
