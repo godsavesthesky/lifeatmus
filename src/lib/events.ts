@@ -136,6 +136,28 @@ function toRow(input: EventInput) {
 
 // ── Baca ────────────────────────────────────────────────────────────────────
 
+/**
+ * Upload file gambar ke bucket `event-covers` (lihat migrasi 0009), lalu
+ * kembalikan URL publiknya — itu yang dipakai sebagai `coverImageUrl`.
+ * RLS bucket-nya cuma izinin admin upload, jadi kalau ini dipanggil orang
+ * yang bukan admin, Supabase yang nolak (bukan kode ini).
+ */
+export async function uploadEventCoverImage(file: File): Promise<string> {
+  const ext = file.name.split('.').pop() || 'jpg'
+  // Nama file diacak (timestamp + random) supaya dua admin yang upload
+  // gambar berbeda tidak saling menimpa file satu sama lain.
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+  const { error } = await supabase.storage.from('event-covers').upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+  })
+  if (error) throw error
+
+  const { data } = supabase.storage.from('event-covers').getPublicUrl(path)
+  return data.publicUrl
+}
+
 export async function fetchEvents(): Promise<EventRecord[]> {
   const { data, error } = await supabase
     .from('events')

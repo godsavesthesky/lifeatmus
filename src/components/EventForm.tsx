@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import type { EventInput } from '@/lib/events'
-import { humanError } from '@/lib/events'
+import { humanError, uploadEventCoverImage } from '@/lib/events'
 import type { Category, CostType, EventRecord, EventType, RegistrationStatus } from '@/types'
 import { isoDate } from '@/lib/format'
 
@@ -64,9 +64,28 @@ export function EventForm({
   const [form, setForm] = useState<EventInput>(event ? fromEvent(event) : blank())
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   function set<K extends keyof EventInput>(key: K, value: EventInput[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
+  }
+
+  async function handleCoverFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // biar bisa pilih file yang sama lagi kalau mau upload ulang
+    if (!file) return
+
+    setUploadError(null)
+    setUploading(true)
+    try {
+      const url = await uploadEventCoverImage(file)
+      set('coverImageUrl', url)
+    } catch (err) {
+      setUploadError(humanError(err))
+    } finally {
+      setUploading(false)
+    }
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -243,13 +262,39 @@ export function EventForm({
             />
           </Field>
 
-          <Field label="Gambar sampul (URL)">
-            <input
-              type="url"
-              value={form.coverImageUrl}
-              onChange={(e) => set('coverImageUrl', e.target.value)}
-              className={inputLine}
-            />
+          <Field label="Gambar sampul">
+            <div className="flex flex-col gap-3">
+              {form.coverImageUrl && (
+                <img
+                  src={form.coverImageUrl}
+                  alt=""
+                  className="h-32 w-full rounded-none border border-line object-cover"
+                />
+              )}
+
+              <label className="inline-flex w-fit cursor-pointer items-center gap-2 border border-line px-4 py-2 text-sm text-cream transition-colors hover:border-lime">
+                {uploading ? 'Mengunggah…' : 'Upload dari komputer'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverFileChange}
+                  disabled={uploading}
+                  className="hidden"
+                />
+              </label>
+              {uploadError && <p className="text-xs text-red-300">{uploadError}</p>}
+
+              {/* Tetap dibiarkan ada buat kasus pake gambar yang udah
+                  di-hosting di tempat lain (mis. Unsplash) — upload di atas
+                  otomatis ngisi ini, tapi field-nya boleh diedit manual juga. */}
+              <input
+                type="url"
+                placeholder="atau tempel URL gambar di sini"
+                value={form.coverImageUrl}
+                onChange={(e) => set('coverImageUrl', e.target.value)}
+                className={inputLine}
+              />
+            </div>
           </Field>
 
           <div className="grid grid-cols-2 gap-4">
@@ -345,7 +390,7 @@ export function EventForm({
         <div className="mt-8 flex items-center gap-4 border-t border-line pt-6">
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || uploading}
             className="bg-lime px-6 py-3 font-medium text-ink transition-colors hover:bg-limedim disabled:opacity-50"
           >
             {saving ? 'Menyimpan…' : event ? 'Simpan perubahan' : 'Buat acara'}
