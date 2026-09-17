@@ -9,6 +9,7 @@ export const currentUser: User = {
   avatarUrl: avatar('jihan'),
   department: 'Desain Grafis',
   departmentVerified: true,
+  onboarded: true,
   role: 'intern',
   isAdmin: true,
   createdAt: '2026-01-10',
@@ -16,15 +17,15 @@ export const currentUser: User = {
 
 export const mockUsers: User[] = [
   currentUser,
-  { id: 'u-1', name: 'Andi Prakoso', email: 'andi@company.com', avatarUrl: avatar('andi'), department: 'Digital Marketing', departmentVerified: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
-  { id: 'u-2', name: 'Sarah Wijaya', email: 'sarah@company.com', avatarUrl: avatar('sarah'), department: 'Content Creator', departmentVerified: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
-  { id: 'u-3', name: 'Raka Putra', email: 'raka@company.com', avatarUrl: avatar('raka'), department: 'Software Developer', departmentVerified: true, role: 'employee', isAdmin: true, createdAt: '2026-01-10' },
-  { id: 'u-4', name: 'Nadia Kusuma', email: 'nadia@company.com', avatarUrl: avatar('nadia'), department: 'HR (Human Resources)', departmentVerified: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
-  { id: 'u-5', name: 'Bimo Aditya', email: 'bimo@company.com', avatarUrl: avatar('bimo'), department: 'IT Support', departmentVerified: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
-  { id: 'u-6', name: 'Clara Dewi', email: 'clara@company.com', avatarUrl: avatar('clara'), department: 'Admin Keuangan', departmentVerified: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
+  { id: 'u-1', name: 'Andi Prakoso', email: 'andi@company.com', avatarUrl: avatar('andi'), department: 'Digital Marketing', departmentVerified: true, onboarded: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
+  { id: 'u-2', name: 'Sarah Wijaya', email: 'sarah@company.com', avatarUrl: avatar('sarah'), department: 'Content Creator', departmentVerified: true, onboarded: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
+  { id: 'u-3', name: 'Raka Putra', email: 'raka@company.com', avatarUrl: avatar('raka'), department: 'Software Developer', departmentVerified: true, onboarded: true, role: 'employee', isAdmin: true, createdAt: '2026-01-10' },
+  { id: 'u-4', name: 'Nadia Kusuma', email: 'nadia@company.com', avatarUrl: avatar('nadia'), department: 'HR (Human Resources)', departmentVerified: true, onboarded: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
+  { id: 'u-5', name: 'Bimo Aditya', email: 'bimo@company.com', avatarUrl: avatar('bimo'), department: 'IT Support', departmentVerified: true, onboarded: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
+  { id: 'u-6', name: 'Clara Dewi', email: 'clara@company.com', avatarUrl: avatar('clara'), department: 'Admin Keuangan', departmentVerified: true, onboarded: true, role: 'employee', isAdmin: false, createdAt: '2026-01-10' },
   // Recent sign-ups awaiting admin confirmation of their self-selected department
-  { id: 'u-7', name: 'Yoga Saputra', email: 'yoga@company.com', avatarUrl: avatar('yoga'), department: 'AI Engineer', departmentVerified: false, role: 'intern', isAdmin: false, createdAt: '2026-09-15' },
-  { id: 'u-8', name: 'Dewi Anggraini', email: 'dewi.a@company.com', avatarUrl: avatar('dewi'), department: 'Videographer', departmentVerified: false, role: 'employee', isAdmin: false, createdAt: '2026-09-16' },
+  { id: 'u-7', name: 'Yoga Saputra', email: 'yoga@company.com', avatarUrl: avatar('yoga'), department: 'AI Engineer', departmentVerified: false, onboarded: true, role: 'intern', isAdmin: false, createdAt: '2026-09-15' },
+  { id: 'u-8', name: 'Dewi Anggraini', email: 'dewi.a@company.com', avatarUrl: avatar('dewi'), department: 'Videographer', departmentVerified: false, onboarded: true, role: 'employee', isAdmin: false, createdAt: '2026-09-16' },
 ]
 
 const attendeesFor = (eventId: string, userIds: string[]): EventRecord['attendees'] =>
