@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/lib/auth'
 import { isSupabaseConfigured } from '@/lib/supabase'
-import { SetupNotice } from '@/components/Setupnotice'
+import { SetupNotice } from '@/components/SetupNotice'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
