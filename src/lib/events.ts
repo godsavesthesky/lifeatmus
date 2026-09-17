@@ -87,6 +87,7 @@ export function mapProfile(row: any): User {
     avatarUrl: row.avatar_url ?? undefined,
     department: row.department,
     departmentVerified: row.department_verified,
+    onboarded: row.onboarded,
     role: row.role,
     isAdmin: row.is_admin,
     // Kolom ini baru ada sejak migrasi 0003. `!== false` supaya baris lama

@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/lib/auth'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { SetupNotice } from '@/components/SetupNotice'
@@ -12,6 +12,7 @@ import { EventDetail } from '@/pages/EventDetail'
 import { Admin } from '@/pages/Admin'
 import { Login } from '@/pages/Login'
 import { Signup } from '@/pages/Signup'
+import { Onboarding } from '@/pages/Onboarding'
 
 function App() {
   // Dicek sebelum AuthProvider dipasang, karena AuthProvider langsung
@@ -25,6 +26,7 @@ function App() {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <RevokedBanner />
+        <OnboardingRedirect />
         <main className="flex-1">
           <Routes>
             {/* Beranda sengaja TIDAK digembok ProtectedRoute (lihat migrasi
@@ -61,6 +63,14 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/daftar" element={<Signup />} />
             <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <Onboarding />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin"
               element={
                 <ProtectedRoute requireAdmin>
@@ -74,6 +84,24 @@ function App() {
       </div>
     </AuthProvider>
   )
+}
+
+/**
+ * Dipasang di atas semua route: begitu ada sesi login yang profilnya belum
+ * `onboarded`, paksa ke /onboarding dari halaman manapun dia mendarat
+ * (termasuk beranda, yang memang sengaja publik). Ini cuma kenyamanan
+ * tampilan — kalau orangnya coba akses data lain langsung lewat API tanpa
+ * lewat sini, RLS di database tetap yang menentukan apa yang benar-benar
+ * boleh dia baca/ubah, bukan komponen ini.
+ */
+function OnboardingRedirect() {
+  const { session, profile, loading } = useAuth()
+  const location = useLocation()
+
+  if (loading || !session || !profile || profile.onboarded) return null
+  if (location.pathname === '/onboarding' || location.pathname === '/login') return null
+
+  return <Navigate to="/onboarding" replace />
 }
 
 /**

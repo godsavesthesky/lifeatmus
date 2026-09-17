@@ -10,6 +10,8 @@ export interface User {
   department: Department | 'Unassigned'
   /** Salah sampai admin memastikan divisi yang dipilih sendiri saat daftar itu benar. */
   departmentVerified: boolean
+  /** Sudah pernah lewatin layar "lengkapi profil" sekali jalan atau belum. */
+  onboarded: boolean
   role: Role
   /**
    * Admin adalah *hak akses*, bukan jabatan — karyawan maupun magang sama-sama
