@@ -2,16 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { mapProfile } from '@/lib/events'
-import type { Role, User } from '@/types'
-import type { Department } from '@/data/departments'
-
-interface SignUpInput {
-  email: string
-  password: string
-  name: string
-  department: Department | 'Unassigned'
-  role: Role
-}
+import type { User } from '@/types'
 
 interface AuthState {
   /** Objek sesi milik Supabase (token, kedaluwarsa). Null saat belum masuk. */
@@ -28,8 +19,14 @@ interface AuthState {
   loading: boolean
   /** Profil ada tapi aksesnya dicabut admin — datanya akan kosong semua. */
   accessRevoked: boolean
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>
-  signUp: (input: SignUpInput) => Promise<{ error: string | null; needsConfirmation: boolean }>
+  /**
+   * Login lewat Google OAuth. Ini juga BERFUNGSI SEBAGAI daftar: kalau
+   * `auth.users` belum ada baris untuk akun Google ini, Supabase membuatnya
+   * sendiri, lalu trigger `handle_new_user` (lihat migrasi 0001/0003) yang
+   * mengisi baris `profiles`-nya — sama seperti alur email/password lama,
+   * cuma pemicunya beda. Tidak ada langkah "daftar" terpisah.
+   */
+  signInWithGoogle: () => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -91,27 +88,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (session) await loadProfile(session.user.id)
   }
 
-  async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error: error?.message ?? null }
-  }
-
-  async function signUp({ email, password, name, department, role }: SignUpInput) {
-    // Nilai di `data` masuk ke raw_user_meta_data dan dibaca trigger
-    // handle_new_user untuk mengisi baris profiles pada transaksi yang sama.
-    // Trigger itu memvalidasi ulang divisi dan role — apa pun yang dikirim
-    // dari sini tidak dipercaya begitu saja.
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name, department, role } },
+  async function signInWithGoogle() {
+    // redirectTo: balik ke origin saat ini (bukan hardcode localhost), jadi
+    // ini otomatis benar baik di localhost maupun di domain production.
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
     })
-
-    if (error) return { error: error.message, needsConfirmation: false }
-
-    // Kalau konfirmasi email menyala di Supabase, signUp berhasil tapi
-    // sesinya belum ada — orangnya harus klik tautan di emailnya dulu.
-    return { error: null, needsConfirmation: !data.session }
+    return { error: error?.message ?? null }
   }
 
   async function signOut() {
@@ -122,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, profile, loading, accessRevoked, signIn, signUp, signOut, refreshProfile }}
+      value={{ session, profile, loading, accessRevoked, signInWithGoogle, signOut, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>

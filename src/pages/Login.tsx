@@ -1,13 +1,10 @@
-import { useState, type FormEvent } from 'react'
-import { useNavigate, useLocation, Navigate, Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useLocation, Navigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 
 export function Login() {
-  const { session, signIn, loading } = useAuth()
-  const navigate = useNavigate()
+  const { session, signInWithGoogle, loading } = useAuth()
   const location = useLocation()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -16,27 +13,18 @@ export function Login() {
     return <Navigate to={from} replace />
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
+  async function handleGoogleLogin() {
     setError(null)
     setSubmitting(true)
-    const res = await signIn(email, password)
-    setSubmitting(false)
-
+    // Ini juga sekaligus jadi cara "daftar": kalau ini kali pertama akun
+    // Google ini dipakai, Supabase membuat barisnya sendiri lalu trigger
+    // handle_new_user langsung mengisi profil — tidak ada langkah terpisah.
+    // Setelah ini, Supabase mengarahkan browser keluar ke Google, jadi
+    // `submitting` cuma sempat kelihatan sesaat kecuali ada error.
+    const res = await signInWithGoogle()
     if (res.error) {
-      // Pesan mentah dari Supabase berbahasa Inggris dan terdengar teknis.
-      // Yang paling sering muncul diterjemahkan; sisanya ditampilkan apa
-      // adanya daripada disembunyikan di balik pesan umum yang tidak menolong.
-      const raw = res.error.toLowerCase()
-      setError(
-        raw.includes('invalid login')
-          ? 'Email atau kata sandi tidak cocok. Coba lagi.'
-          : raw.includes('email not confirmed')
-            ? 'Email ini belum dikonfirmasi. Cek kotak masuk untuk tautan konfirmasinya.'
-            : res.error
-      )
-    } else {
-      navigate((location.state as { from?: string })?.from ?? '/', { replace: true })
+      setError(res.error)
+      setSubmitting(false)
     }
   }
 
@@ -52,35 +40,12 @@ export function Login() {
           </span>
         </h1>
         <p className="mt-6 max-w-[42ch] text-muted">
-          Agenda kantor, siapa saja yang ikut, dan playlist minggu ini ada di balik sini.
+          Agenda kantor, siapa saja yang ikut, dan playlist minggu ini ada di balik sini. Belum
+          punya akun? Masuk dengan Google saja — otomatis dibuatkan.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex max-w-sm flex-col gap-7">
-        <label className="flex flex-col gap-2">
-          <span className="text-sm text-muted">Email</span>
-          <input
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="border-b border-rule bg-transparent pb-2 text-lg text-cream focus:border-lime focus:outline-none"
-          />
-        </label>
-
-        <label className="flex flex-col gap-2">
-          <span className="text-sm text-muted">Kata sandi</span>
-          <input
-            type="password"
-            required
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="border-b border-rule bg-transparent pb-2 text-lg text-cream focus:border-lime focus:outline-none"
-          />
-        </label>
-
+      <div className="flex max-w-sm flex-col gap-7">
         {error && (
           <p role="alert" className="border-l-2 border-red-400 pl-3 text-sm text-red-300">
             {error}
@@ -88,20 +53,38 @@ export function Login() {
         )}
 
         <button
-          type="submit"
+          type="button"
+          onClick={handleGoogleLogin}
           disabled={submitting}
-          className="self-start bg-lime px-8 py-3.5 font-medium text-ink transition-colors hover:bg-limedim disabled:opacity-50"
+          className="flex items-center justify-center gap-3 self-start bg-lime px-8 py-3.5 font-medium text-ink transition-colors hover:bg-limedim disabled:opacity-50"
         >
-          {submitting ? 'Sebentar…' : 'Masuk'}
+          <GoogleIcon />
+          {submitting ? 'Mengarahkan…' : 'Masuk dengan Google'}
         </button>
-
-        <p className="text-sm text-muted">
-          Belum punya akun?{' '}
-          <Link to="/daftar" className="link-sweep text-lime">
-            Daftar di sini
-          </Link>
-        </p>
-      </form>
+      </div>
     </div>
+  )
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.56 2.7-3.87 2.7-6.62Z"
+      />
+      <path
+        fill="#34A853"
+        d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.95v2.33A9 9 0 0 0 9 18Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M3.95 10.7A5.4 5.4 0 0 1 3.66 9c0-.59.1-1.16.29-1.7V4.97H.95A9 9 0 0 0 0 9c0 1.45.35 2.83.95 4.03l3-2.33Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .95 4.97l3 2.33C4.66 5.17 6.65 3.58 9 3.58Z"
+      />
+    </svg>
   )
 }
