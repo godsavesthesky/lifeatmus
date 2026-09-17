@@ -98,6 +98,34 @@ export function mapProfile(row: any): User {
     createdAt: row.created_at,
   }
 }
+
+/**
+ * Admin cuma perlu tempel satu tautan Apple Music yang biasa di-share dari
+ * app-nya. Dari situ diturunkan dua bentuk yang dipakai aplikasi: versi
+ * biasa untuk tombol "Buka di Apple Music", dan versi embed:// untuk iframe
+ * pemutar (lihat catatan di migrasi 0005). Tempel salah satu bentuknya saja,
+ * hasilnya tetap benar.
+ */
+function deriveAppleMusicUrls(input: string): { url: string; embed: string } {
+  const trimmed = input.trim()
+  return {
+    url: trimmed.replace('https://embed.music.apple.com', 'https://music.apple.com'),
+    embed: trimmed.replace('https://music.apple.com', 'https://embed.music.apple.com'),
+  }
+}
+
+function mapPlaylist(row: any): WeeklyPlaylist {
+  return {
+    id: row.id,
+    weekStart: row.week_start,
+    weekLabel: row.week_label ?? '',
+    title: row.title,
+    curatorName: row.curator_name ?? '',
+    coverImageUrl: row.cover_image_url ?? '',
+    appleMusicEmbedUrl: row.apple_music_embed_url ?? '',
+    appleMusicUrl: row.apple_music_url ?? '',
+  }
+}
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 /** Bentuk yang dipakai form acara di halaman Admin. */
@@ -131,6 +159,30 @@ function toRow(input: EventInput) {
     external_registration_url: orNull(input.externalRegistrationUrl),
     external_event_url: orNull(input.externalEventUrl),
     max_attendees: input.maxAttendees ? Number(input.maxAttendees) : null,
+  }
+}
+
+/** Bentuk yang dipakai form playlist di halaman Admin. */
+export type PlaylistInput = {
+  weekStart: string
+  weekLabel: string
+  title: string
+  curatorName: string
+  coverImageUrl: string
+  /** Tautan yang ditempel admin — bentuk biasa ATAU embed, dua-duanya diterima. */
+  appleMusicUrl: string
+}
+
+function toPlaylistRow(input: PlaylistInput) {
+  const { url, embed } = deriveAppleMusicUrls(input.appleMusicUrl)
+  return {
+    week_start: input.weekStart,
+    week_label: input.weekLabel.trim(),
+    title: input.title.trim(),
+    curator_name: input.curatorName.trim(),
+    cover_image_url: input.coverImageUrl ?? '',
+    apple_music_url: url,
+    apple_music_embed_url: embed,
   }
 }
 
@@ -225,17 +277,7 @@ export async function fetchPlaylist(): Promise<WeeklyPlaylist | null> {
     .maybeSingle()
 
   if (error) throw error
-  if (!data) return null
-
-  return {
-    id: data.id,
-    weekLabel: data.week_label ?? '',
-    title: data.title,
-    curatorName: data.curator_name ?? '',
-    coverImageUrl: data.cover_image_url ?? '',
-    appleMusicEmbedUrl: data.apple_music_embed_url ?? '',
-    appleMusicUrl: data.apple_music_url ?? '',
-  }
+  return data ? mapPlaylist(data) : null
 }
 
 // ── Kehadiran ───────────────────────────────────────────────────────────────
@@ -295,6 +337,40 @@ export async function updateEvent(id: string, input: EventInput) {
 
 export async function deleteEvent(id: string) {
   const { error } = await supabase.from('events').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ── Kelola playlist (admin) ─────────────────────────────────────────────────
+
+/** Semua playlist, terbaru dulu — dipakai halaman Admin. */
+export async function fetchPlaylists(): Promise<WeeklyPlaylist[]> {
+  const { data, error } = await supabase
+    .from('weekly_playlists')
+    .select('*')
+    .order('week_start', { ascending: false })
+
+  if (error) throw error
+  return (data ?? []).map(mapPlaylist)
+}
+
+/**
+ * Buat atau timpa playlist minggu tertentu. `week_start` unik di database
+ * (migrasi 0004), jadi upsert ke minggu yang sudah ada menimpa, bukan bikin
+ * baris dobel.
+ */
+export async function upsertPlaylist(input: PlaylistInput): Promise<WeeklyPlaylist> {
+  const { data, error } = await supabase
+    .from('weekly_playlists')
+    .upsert(toPlaylistRow(input), { onConflict: 'week_start' })
+    .select('*')
+    .single()
+
+  if (error) throw error
+  return mapPlaylist(data)
+}
+
+export async function deletePlaylist(weekStart: string) {
+  const { error } = await supabase.from('weekly_playlists').delete().eq('week_start', weekStart)
   if (error) throw error
 }
 

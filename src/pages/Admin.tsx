@@ -4,18 +4,23 @@ import { DEPARTMENTS } from '@/data/departments'
 import { useAuth } from '@/lib/auth'
 import { useEvents } from '@/hooks/useEvents'
 import { EventForm } from '@/components/EventForm'
+import { PlaylistForm } from '@/components/PlaylistForm'
 import { ErrorNote, Loading } from '@/components/States'
 import {
   createEvent,
   deleteEvent,
+  deletePlaylist,
+  fetchPlaylists,
   fetchProfiles,
   humanError,
   updateEvent,
   updateProfile,
+  upsertPlaylist,
   type EventInput,
+  type PlaylistInput,
 } from '@/lib/events'
 import { confirmedAttendees, effectiveStatus, formatDateShort } from '@/lib/format'
-import type { EventRecord, User } from '@/types'
+import type { EventRecord, User, WeeklyPlaylist } from '@/types'
 
 /**
  * Dasbor admin.
@@ -35,6 +40,12 @@ export function Admin() {
   const [editing, setEditing] = useState<User | null>(null)
   const [eventForm, setEventForm] = useState<{ open: boolean; event?: EventRecord }>({ open: false })
 
+  const [playlists, setPlaylists] = useState<WeeklyPlaylist[]>([])
+  const [playlistsLoading, setPlaylistsLoading] = useState(true)
+  const [playlistForm, setPlaylistForm] = useState<{ open: boolean; playlist?: WeeklyPlaylist }>({
+    open: false,
+  })
+
   const loadUsers = useCallback(async () => {
     setLoading(true)
     try {
@@ -50,6 +61,22 @@ export function Admin() {
   useEffect(() => {
     void loadUsers()
   }, [loadUsers])
+
+  const loadPlaylists = useCallback(async () => {
+    setPlaylistsLoading(true)
+    try {
+      setPlaylists(await fetchPlaylists())
+      setError(null)
+    } catch (err) {
+      setError(humanError(err))
+    } finally {
+      setPlaylistsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadPlaylists()
+  }, [loadPlaylists])
 
   const isActive = (u: User) => u.isActive !== false
   const pending = users.filter((u) => !u.departmentVerified && isActive(u))
@@ -101,6 +128,21 @@ export function Admin() {
     try {
       await deleteEvent(event.id)
       await reloadEvents()
+    } catch (err) {
+      setError(humanError(err))
+    }
+  }
+
+  async function savePlaylist(input: PlaylistInput) {
+    await upsertPlaylist(input)
+    await loadPlaylists()
+  }
+
+  async function removePlaylist(p: WeeklyPlaylist) {
+    if (!confirm(`Hapus playlist "${p.weekLabel || p.weekStart}"?`)) return
+    try {
+      await deletePlaylist(p.weekStart)
+      await loadPlaylists()
     } catch (err) {
       setError(humanError(err))
     }
@@ -250,6 +292,72 @@ export function Admin() {
         )}
       </section>
 
+      {/* ── Playlist ───────────────────────────────────────────────────── */}
+      <section className="mt-16">
+        <div className="flex flex-wrap items-baseline justify-between gap-4">
+          <h2 className="font-display text-loud uppercase text-cream">Playlist</h2>
+          <button
+            onClick={() => setPlaylistForm({ open: true })}
+            className="bg-lime px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-limedim"
+          >
+            Tambah / ganti playlist
+          </button>
+        </div>
+
+        {playlistsLoading ? (
+          <Loading label="Mengambil playlist…" />
+        ) : playlists.length === 0 ? (
+          <p className="mt-5 border-y border-rule py-10 text-sm text-muted">
+            Belum ada playlist yang diisi. Tekan “Tambah / ganti playlist” untuk mengisi minggu ini.
+          </p>
+        ) : (
+          <div className="mt-5 overflow-x-auto border-y border-rule">
+            <table className="w-full min-w-[720px] text-sm">
+              <thead>
+                <tr className="border-b border-line text-left text-muted">
+                  <th className="py-3 pr-4 font-normal">Minggu</th>
+                  <th className="py-3 pr-4 font-normal">Judul</th>
+                  <th className="py-3 pr-4 font-normal">Kurator</th>
+                  <th className="py-3" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {playlists.map((p) => (
+                  <tr key={p.id}>
+                    <td className="tnum py-3.5 pr-4 text-muted">{p.weekLabel || p.weekStart}</td>
+                    <td className="py-3.5 pr-4">
+                      
+                        href={p.appleMusicUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cream hover:text-lime"
+                      >
+                        {p.title}
+                      </a>
+                    </td>
+                    <td className="py-3.5 pr-4 text-muted">{p.curatorName}</td>
+                    <td className="py-3.5 text-right">
+                      <button
+                        onClick={() => setPlaylistForm({ open: true, playlist: p })}
+                        className="link-sweep text-lime"
+                      >
+                        Ubah
+                      </button>
+                      <button
+                        onClick={() => removePlaylist(p)}
+                        className="link-sweep ml-4 text-red-300"
+                      >
+                        Hapus
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
       {/* ── Anggota ────────────────────────────────────────────────────── */}
       <section className="mt-16">
         <h2 className="font-display text-loud uppercase text-cream">Anggota</h2>
@@ -326,6 +434,14 @@ export function Admin() {
           event={eventForm.event}
           onSubmit={saveEvent}
           onClose={() => setEventForm({ open: false })}
+        />
+      )}
+
+      {playlistForm.open && (
+        <PlaylistForm
+          playlist={playlistForm.playlist}
+          onSubmit={savePlaylist}
+          onClose={() => setPlaylistForm({ open: false })}
         />
       )}
     </div>

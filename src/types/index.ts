@@ -58,6 +58,8 @@ export interface EventAttendee {
 
 export interface WeeklyPlaylist {
   id: string
+  /** ISO Senin minggu ini, contoh "2026-09-14". Kunci upsert di database. */
+  weekStart: string
   weekLabel: string
   title: string
   curatorName: string
