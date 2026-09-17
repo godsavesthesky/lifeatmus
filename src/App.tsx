@@ -13,6 +13,7 @@ import { Admin } from '@/pages/Admin'
 import { Login } from '@/pages/Login'
 import { Signup } from '@/pages/Signup'
 import { Onboarding } from '@/pages/Onboarding'
+import { Profile } from '@/pages/Profile'
 
 function App() {
   // Dicek sebelum AuthProvider dipasang, karena AuthProvider langsung
@@ -67,6 +68,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Onboarding />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profil"
+              element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               }
             />

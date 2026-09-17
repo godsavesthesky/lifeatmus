@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 
 const links = [
@@ -55,17 +55,22 @@ export function Navbar() {
 
           {session && profile ? (
             <>
-              {profile.avatarUrl ? (
-                <img
-                  src={profile.avatarUrl}
-                  alt={profile.name}
-                  className="h-9 w-9 rounded-full border border-line object-cover"
-                />
-              ) : (
-                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-navy text-xs text-cream">
-                  {initials(profile.name)}
-                </span>
-              )}
+              {/* Avatar sekarang jadi pintu ke /profil — sebelumnya cuma
+                  gambar diam, orang nggak punya cara lihat/ganti divisinya
+                  sendiri atau (di layar kecil) logout sama sekali. */}
+              <Link to="/profil" aria-label="Profil">
+                {profile.avatarUrl ? (
+                  <img
+                    src={profile.avatarUrl}
+                    alt={profile.name}
+                    className="h-9 w-9 rounded-full border border-line object-cover transition-opacity hover:opacity-80"
+                  />
+                ) : (
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-navy text-xs text-cream transition-opacity hover:opacity-80">
+                    {initials(profile.name)}
+                  </span>
+                )}
+              </Link>
               <button
                 onClick={handleSignOut}
                 className="hidden text-sm text-cream/70 transition-colors hover:text-lime sm:inline-block"
